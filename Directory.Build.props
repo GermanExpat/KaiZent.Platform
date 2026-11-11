@@ -1,0 +1,24 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Paketversionen zentral, gleiche Stände wie in KaiZent VMS und SCM Suite -->
+    <CryptoPatchVersion>10.0.14</CryptoPatchVersion>
+    <DevExpressVersion>26.1.6</DevExpressVersion>
+    <DapperVersion>2.1.89</DapperVersion>
+    <NpgsqlVersion>10.0.3</NpgsqlVersion>
+    <AspNetVersion>10.0.14</AspNetVersion>
+    <!-- NuGet-Pakete (GitHub Packages), Version aus dem Git-Tag v* in der CI -->
+    <Version Condition="'$(Version)' == ''">0.1.0-dev</Version>
+    <Authors>KaiZent</Authors>
+    <Company>KaiZent</Company>
+    <RepositoryUrl>https://github.com/GermanExpat/KaiZent.Platform</RepositoryUrl>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- fehlende XML-Kommentare an öffentlichen Typen sind kein Fehler -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+</Project>

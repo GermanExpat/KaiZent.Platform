@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Gemeinsame API-Verträge: Routen, Rollen, Anmeldung, Mandanten, Benutzereinstellungen. Keine Abhängigkeit auf Datenbank oder UI. -->
+  <PropertyGroup>
+    <RootNamespace>KaiZent.Platform.Contracts</RootNamespace>
+    <IsPackable>true</IsPackable>
+    <Description>KaiZent.Platform: gemeinsame API-Verträge</Description>
+  </PropertyGroup>
+</Project>

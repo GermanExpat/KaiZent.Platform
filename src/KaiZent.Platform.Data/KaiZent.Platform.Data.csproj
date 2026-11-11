@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Datenbank: Katalog (Mandanten, Konten) und je Mandant eine eigene Datenbank, Migrationen, Protokoll, Verschlüsselung. -->
+  <PropertyGroup>
+    <RootNamespace>KaiZent.Platform.Data</RootNamespace>
+    <IsPackable>true</IsPackable>
+    <Description>KaiZent.Platform: Katalog- und Mandanten-Datenbanken, Migrationen, Protokoll, SecretBox</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="$(DapperVersion)" />
+    <PackageReference Include="Npgsql" Version="$(NpgsqlVersion)" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\KaiZent.Platform.Contracts\KaiZent.Platform.Contracts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- migrations/<GRUPPE>/V####__name.sql, als Ressource "kaizent-platform/migrations/<GRUPPE>/<Datei>" eingebettet -->
+    <EmbeddedResource Include="migrations\**\*.sql" LogicalName="kaizent-platform/migrations/%(RecursiveDir)%(Filename)%(Extension)" WithCulture="false" />
+  </ItemGroup>
+</Project>

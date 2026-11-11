@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!-- Beispiel-Produkt: zeigt, wie ein Produkt die Plattform einbindet, und dient den Integrationstests als Gastgeber. -->
+  <PropertyGroup>
+    <RootNamespace>KaiZent.Platform.SampleHost</RootNamespace>
+    <UserSecretsId>kaizent-platform-sample</UserSecretsId>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\KaiZent.Platform.Api\KaiZent.Platform.Api.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="migrations\**\*.sql" LogicalName="migrations/%(RecursiveDir)%(Filename)%(Extension)" WithCulture="false" />
+  </ItemGroup>
+</Project>
