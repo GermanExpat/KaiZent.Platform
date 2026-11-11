@@ -48,6 +48,8 @@ public static class PlatformExtensions
         }));
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<Tokens>();
+        services.AddSingleton(sp => SecretBox.LoadOrCreate(sp.GetRequiredService<IOptions<PlatformOptions>>().Value.KeysPath));
+        services.AddSingleton<TwoFactorService>();
         services.AddSingleton<TenantProvisioner>();
         services.AddSingleton<StartupTasks>();
         services.AddScoped<AccessGuard>();

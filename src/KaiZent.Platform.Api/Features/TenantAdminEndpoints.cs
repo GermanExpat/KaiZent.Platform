@@ -34,7 +34,8 @@ public static class TenantAdminEndpoints
     }
 
     private const string UserSql = """
-        select id as Id, email as Email, display_name as DisplayName, role as Role, is_active as IsActive, last_login_at as LastLoginAt
+        select id as Id, email as Email, display_name as DisplayName, role as Role, is_active as IsActive, last_login_at as LastLoginAt,
+               totp_enabled as TwoFactorEnabled
         from catalog.app_user
         """;
 
@@ -118,7 +119,9 @@ public static class TenantAdminEndpoints
         await using var conn = await catalog.OpenAsync(ct);
         var n = await conn.ExecuteAsync(new CommandDefinition("""
             update catalog.app_user set password_hash = @Hash, must_change_password = true, session_version = session_version + 1,
-                   failed_logins = 0, locked_until = null
+                   failed_logins = 0, locked_until = null,
+                   -- wer Passwort und Telefon verloren hat, richtet die Zwei-Faktor-Anmeldung danach neu ein
+                   totp_enabled = false, totp_secret = null, totp_last_step = null, recovery_code_hashes = null
             where id = @Id and tenant_id = @Tenant
             """, new { Id = id, Tenant = tenant.TenantId, Hash = Passwords.Hash(request.NewPassword) }, cancellationToken: ct));
         if (n == 0) throw ApiProblem.NotFound("Benutzer nicht gefunden.");
@@ -130,9 +133,9 @@ public static class TenantAdminEndpoints
 
     private static async Task<TenantSettings> LoadSettingsAsync(NpgsqlConnection conn, Guid tenantId, CancellationToken ct)
     {
-        var row = await conn.QuerySingleAsync<(string Theme, string Language)>(new CommandDefinition(
-            "select default_theme, default_language from catalog.tenant where id = @Id", new { Id = tenantId }, cancellationToken: ct));
-        return new TenantSettings(ThemeCatalog.Resolve(row.Theme).Key, Languages.IsKnown(row.Language) ? row.Language : Languages.Default);
+        var row = await conn.QuerySingleAsync<(string Theme, string Language, bool RequireTwoFactor)>(new CommandDefinition(
+            "select default_theme, default_language, require_two_factor from catalog.tenant where id = @Id", new { Id = tenantId }, cancellationToken: ct));
+        return new TenantSettings(ThemeCatalog.Resolve(row.Theme).Key, Languages.IsKnown(row.Language) ? row.Language : Languages.Default, row.RequireTwoFactor);
     }
 
     private static async Task<TenantSettings> GetSettingsAsync(TenantContext tenant, CatalogDb catalog, CancellationToken ct)
@@ -149,8 +152,8 @@ public static class TenantAdminEndpoints
             .ThrowIfInvalid();
         await using var conn = await catalog.OpenAsync(ct);
         await conn.ExecuteAsync(new CommandDefinition(
-            "update catalog.tenant set default_theme = @Theme, default_language = @Language where id = @Id",
-            new { Id = tenant.TenantId, Theme = request.DefaultTheme, Language = request.DefaultLanguage }, cancellationToken: ct));
+            "update catalog.tenant set default_theme = @Theme, default_language = @Language, require_two_factor = @RequireTwoFactor where id = @Id",
+            new { Id = tenant.TenantId, Theme = request.DefaultTheme, Language = request.DefaultLanguage, request.RequireTwoFactor }, cancellationToken: ct));
         await using (var db = await tenant.OpenAsync(ct))
             await tenant.AuditAsync(db, "tenant.settings_changed", "tenant", tenant.TenantId.ToString(), request, ct: ct);
         return request;

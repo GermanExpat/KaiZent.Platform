@@ -34,6 +34,9 @@ public sealed class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
     public const string AdminPassword = "Plattform2026Test";
     public const string TenantPassword = "Mandant2026Start";
 
+    /// <summary>Wegwerf-Ordner für den SecretBox-Schlüssel.</summary>
+    public string KeysPath { get; } = Path.Combine(Path.GetTempPath(), "kzp_test_keys_" + Guid.NewGuid().ToString("N")[..12]);
+
     private readonly string _catalogName = "kzp_test_" + Guid.NewGuid().ToString("N")[..12];
 
     public string CatalogConnection => new NpgsqlConnectionStringBuilder(ServerConnection)
@@ -52,6 +55,9 @@ public sealed class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Platform:Database:IdleSeconds", "2");
         // Pflicht zum Passwortwechsel prüft ein eigener Test; die übrigen arbeiten mit dem Startpasswort
         builder.UseSetting("Platform:RequireInitialPasswordChange", "false");
+        // Pflicht für die Plattform-Administration prüft ein eigener Test
+        builder.UseSetting("Platform:RequirePlatformTwoFactor", "false");
+        builder.UseSetting("Platform:KeysPath", KeysPath);
     }
 
     public async Task InitializeAsync()
@@ -65,6 +71,7 @@ public sealed class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
     async Task IAsyncLifetime.DisposeAsync()
     {
         await base.DisposeAsync();
+        if (Directory.Exists(KeysPath)) Directory.Delete(KeysPath, recursive: true);
         if (string.IsNullOrWhiteSpace(ServerConnection)) return;
         NpgsqlConnection.ClearAllPools();
         var tenantDbs = new List<string>();

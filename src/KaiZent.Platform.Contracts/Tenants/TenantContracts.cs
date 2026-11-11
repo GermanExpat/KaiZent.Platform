@@ -18,7 +18,7 @@ public sealed record UpdateTenantRequest(string Name, IReadOnlyList<string> Modu
 public sealed record SetActiveRequest(bool IsActive);
 
 /// <summary>Benutzer eines Mandanten aus Sicht der Mandanten-Administration.</summary>
-public sealed record TenantUser(Guid Id, string Email, string DisplayName, string Role, bool IsActive, DateTimeOffset? LastLoginAt);
+public sealed record TenantUser(Guid Id, string Email, string DisplayName, string Role, bool IsActive, DateTimeOffset? LastLoginAt, bool TwoFactorEnabled);
 
 /// <summary>Neues Konto im eigenen Mandanten; das Passwort ist vorläufig und muss bei der ersten Anmeldung geändert werden.</summary>
 public sealed record CreateTenantUserRequest(string Email, string DisplayName, string Role, string InitialPassword);
@@ -29,4 +29,4 @@ public sealed record UpdateTenantUserRequest(string DisplayName, string Role);
 public sealed record ResetPasswordRequest(string NewPassword);
 
 /// <summary>Einstellungen des Mandanten, die für alle seine Benutzer gelten.</summary>
-public sealed record TenantSettings(string DefaultTheme, string DefaultLanguage);
+public sealed record TenantSettings(string DefaultTheme, string DefaultLanguage, bool RequireTwoFactor = false);

@@ -14,6 +14,12 @@ public sealed class PlatformOptions
 
     /// <summary>Neue und zurückgesetzte Passwörter müssen bei der ersten Anmeldung geändert werden.</summary>
     public bool RequireInitialPasswordChange { get; set; } = true;
+
+    /// <summary>Konten der Plattform-Administration müssen die Zwei-Faktor-Anmeldung nutzen.</summary>
+    public bool RequirePlatformTwoFactor { get; set; } = true;
+
+    /// <summary>Ordner für den Schlüssel der <c>SecretBox</c> (TOTP-Geheimnisse, Zugangsdaten). Im Betrieb ein gesichertes Volume.</summary>
+    public string KeysPath { get; set; } = "keys";
 }
 
 public sealed class JwtOptions

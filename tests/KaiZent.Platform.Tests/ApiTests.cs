@@ -20,7 +20,7 @@ public sealed class ApiTests(ApiFixture api)
         var endpoints = api.Services.GetRequiredService<EndpointDataSource>().Endpoints.OfType<RouteEndpoint>().ToList();
         Assert.NotEmpty(endpoints);
         var open = endpoints.Where(e => e.Metadata.GetMetadata<IAllowAnonymous>() is not null).Select(e => e.RoutePattern.RawText).ToList();
-        Assert.Equal(new[] { PlatformRoutes.Health, PlatformRoutes.Login }.Order(StringComparer.Ordinal), open.Order(StringComparer.Ordinal));
+        Assert.Equal(new[] { PlatformRoutes.Health, PlatformRoutes.Login, PlatformRoutes.LoginTwoFactor, PlatformRoutes.LoginTwoFactorSetup, PlatformRoutes.LoginTwoFactorEnable }.Order(StringComparer.Ordinal), open.Order(StringComparer.Ordinal));
         // alle anderen tragen eine Autorisierung (eigene Policy oder die Rückfall-Policy "angemeldet") und den AccessGuard
         foreach (var e in endpoints.Where(e => e.Metadata.GetMetadata<IAllowAnonymous>() is null))
             Assert.True(e.Metadata.GetMetadata<IAuthorizeData>() is not null, $"{e.RoutePattern.RawText} ohne RequireAuthorization");
