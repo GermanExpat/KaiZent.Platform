@@ -114,6 +114,23 @@ public sealed class WebTests(ApiFixture api) : IDisposable
     }
 
     [DbFact]
+    public async Task Password_change_page_shows_and_saves()
+    {
+        var (browser, email) = await SignedInAsync();
+        Assert.Equal(HttpStatusCode.OK, (await browser.GetAsync(AccountRoutes.Password)).StatusCode);
+        var r = await PostFormAsync(browser, AccountRoutes.Password, "/account/password/change",
+            ("currentPassword", ApiFixture.TenantPassword), ("newPassword", "Neu2026Passwort"), ("confirmPassword", "Neu2026Passwort"), ("returnUrl", "/"));
+        Assert.Equal("/", Location(r));
+        Assert.Contains("Hallo Hof-Admin", await browser.GetStringAsync("/"));
+        // das neue Passwort gilt, das alte nicht mehr
+        var fresh = _web.Browser();
+        var old = await PostFormAsync(fresh, "/account/login", "/account/signin", ("email", email), ("password", ApiFixture.TenantPassword));
+        Assert.Contains("error=credentials", Location(old));
+        var ok = await PostFormAsync(fresh, "/account/login", "/account/signin", ("email", email), ("password", "Neu2026Passwort"), ("returnUrl", "/"));
+        Assert.Equal("/", Location(ok));
+    }
+
+    [DbFact]
     public async Task Preferences_change_theme_and_language()
     {
         var (browser, _) = await SignedInAsync();

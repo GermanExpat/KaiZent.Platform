@@ -129,8 +129,8 @@ public static class AccountEndpoints
             return Results.LocalRedirect(AccountRoutes.Login + (form?["reason"].ToString() == "idle" ? "?error=idle" : "?signedOut=1"));
         }).DisableAntiforgery();
 
-        // eigenes Passwort ändern; die API beendet dabei alle anderen Anmeldungen und liefert die neue Anmeldung für diese Sitzung
-        app.MapPost("/account/password", async (HttpContext ctx, KaiZentApi api, IAntiforgery antiforgery) =>
+        // eigenes Passwort ändern (nicht unter /account/password: die Seite selbst nimmt dort POST an, sonst ist die Route doppelt); die API beendet dabei alle anderen Anmeldungen und liefert die neue Anmeldung für diese Sitzung
+        app.MapPost("/account/password/change", async (HttpContext ctx, KaiZentApi api, IAntiforgery antiforgery) =>
         {
             if (!await IsGenuineAsync(ctx, antiforgery)) return Results.LocalRedirect(AccountRoutes.Password + "?error=form");
             var form = await ctx.Request.ReadFormAsync();
