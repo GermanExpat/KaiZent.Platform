@@ -1,0 +1,14 @@
+bin/
+obj/
+*.user
+.vs/
+.vscode/
+.idea/
+TestResults/
+*.log
+.env
+deploy/.env
+appsettings.*.local.json
+
+# Lokale Laufzeitdaten (Schlüssel, Ablage)
+src/KaiZent.VMS.Api/data/

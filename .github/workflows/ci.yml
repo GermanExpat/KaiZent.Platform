@@ -1,0 +1,98 @@
+# KaiZent.Platform – CI. Läuft bei jedem Pull Request und jedem Push auf main.
+#   server:  Bibliotheken, Beispiel-Host und alle Tests gegen ein echtes PostgreSQL 18 (braucht keine Secrets)
+#   publish: bei einem Tag v* (z. B. v0.1.0) die NuGet-Pakete bauen und in GitHub Packages veröffentlichen
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+  schedule:
+    - cron: '23 5 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+
+jobs:
+  server:
+    name: build and tests (PostgreSQL)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:18@sha256:edb0c08dc33befd0262ab3b5cf1c4f3f8cfd8b09e88c05b45adee29d6761ddb6
+        env:
+          POSTGRES_USER: kzp
+          POSTGRES_PASSWORD: ci-only-not-a-secret
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U kzp"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      KAIZENT_TEST_POSTGRES: Host=localhost;Port=5432;Database=postgres;Username=kzp;Password=ci-only-not-a-secret
+    steps:
+      # actions/checkout v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      # actions/setup-dotnet v4.3.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68
+        with:
+          dotnet-version: '10.0.x'
+      - name: build
+        run: dotnet build KaiZent.Platform.slnx -c Release -nologo -p:NuGetAudit=true -p:NuGetAuditMode=all
+      - name: vulnerable packages
+        run: |
+          dotnet list KaiZent.Platform.slnx package --vulnerable --include-transitive 2>&1 | tee vulnerable.txt
+          if grep -qE '^\s*>' vulnerable.txt; then
+            echo "::error::Pakete mit bekannten Schwachstellen gefunden (siehe oben)."
+            exit 1
+          fi
+      - name: tests
+        run: dotnet test tests/KaiZent.Platform.Tests/KaiZent.Platform.Tests.csproj -c Release --no-build --logger "trx;LogFileName=tests.trx" --results-directory test-results
+      # actions/upload-artifact v4.6.2
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: test-results
+          path: test-results/
+          retention-days: 30
+
+  publish:
+    name: NuGet-Pakete veröffentlichen
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: server
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      # actions/checkout v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      # actions/setup-dotnet v4.3.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68
+        with:
+          dotnet-version: '10.0.x'
+      - name: pack
+        run: dotnet pack KaiZent.Platform.slnx -c Release -o packages -p:Version=${GITHUB_REF_NAME#v}
+      - name: push
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: dotnet nuget push "packages/*.nupkg" --source "https://nuget.pkg.github.com/${GITHUB_REPOSITORY_OWNER}/index.json" --api-key "$NUGET_AUTH_TOKEN" --skip-duplicate

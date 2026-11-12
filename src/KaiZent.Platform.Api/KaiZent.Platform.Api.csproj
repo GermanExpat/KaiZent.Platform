@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- API-Bausteine: Anmeldung, AccessGuard, Mandanten-Kontext, Plattform- und Mandanten-Administration, Benutzereinstellungen.
+       Ein Produkt bindet sie mit builder.AddKaiZentPlatform(...) und app.MapKaiZentPlatform() ein. -->
+  <PropertyGroup>
+    <RootNamespace>KaiZent.Platform.Api</RootNamespace>
+    <IsPackable>true</IsPackable>
+    <Description>KaiZent.Platform: API-Bausteine für Anmeldung, Mandanten und Administration</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="$(DapperVersion)" />
+    <PackageReference Include="Npgsql" Version="$(NpgsqlVersion)" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="$(AspNetVersion)" />
+    <PackageReference Include="QRCoder" Version="1.8.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\KaiZent.Platform.Contracts\KaiZent.Platform.Contracts.csproj" />
+    <ProjectReference Include="..\KaiZent.Platform.Data\KaiZent.Platform.Data.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="KaiZent.Platform.Tests" />
+  </ItemGroup>
+</Project>
