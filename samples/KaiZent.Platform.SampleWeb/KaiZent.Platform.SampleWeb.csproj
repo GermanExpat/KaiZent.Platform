@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!-- Beispiel-App: zeigt, wie eine Produkt-App die Konto-Seiten einbindet, und dient den Tests der Anmeldung als Gastgeber. Ohne DevExpress. -->
+  <PropertyGroup>
+    <RootNamespace>KaiZent.Platform.SampleWeb</RootNamespace>
+    <StartupObject>KaiZent.Platform.SampleWeb.WebProgram</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\KaiZent.Platform.Web\KaiZent.Platform.Web.csproj" />
+  </ItemGroup>
+</Project>

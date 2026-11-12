@@ -1,0 +1,14 @@
+@inject Texts T
+<div class="kz-recovery">
+    <p><strong>@T["recovery.hint"]</strong></p>
+    <ul class="kz-recovery-codes">
+        @foreach (var c in Codes)
+        {
+            <li><code>@c</code></li>
+        }
+    </ul>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<string> Codes { get; set; } = [];
+}

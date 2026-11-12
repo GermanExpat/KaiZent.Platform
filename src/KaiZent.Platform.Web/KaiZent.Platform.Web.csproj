@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <!-- Bausteine für die Blazor-Apps der Produkte, ohne DevExpress: Anmeldung (mit Zwei-Faktor), Konto-Seiten (Passwort, Farbschema, Sprache,
+       Zwei-Faktor), API-Client, Texte DE/EN. Die Apps sprechen nur per HTTP mit der API. -->
+  <PropertyGroup>
+    <RootNamespace>KaiZent.Platform.Web</RootNamespace>
+    <IsPackable>true</IsPackable>
+    <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
+    <Description>KaiZent.Platform: Anmeldung, Konto-Seiten, API-Client und Texte DE/EN für Blazor-Apps</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\KaiZent.Platform.Contracts\KaiZent.Platform.Contracts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="KaiZent.Platform.Tests" />
+  </ItemGroup>
+</Project>

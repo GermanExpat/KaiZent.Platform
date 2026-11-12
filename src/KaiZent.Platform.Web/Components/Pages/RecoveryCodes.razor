@@ -1,0 +1,31 @@
+@page "/account/recovery-codes"
+@layout AccountLayout
+@attribute [Authorize]
+@inject Texts T
+@inject IOptions<KaiZentWebOptions> Options
+
+<PageTitle>@T["recovery.title"] · @Options.Value.ProductName</PageTitle>
+
+<h1>@T["recovery.title"]</h1>
+@if (_codes is { Length: > 0 })
+{
+    <RecoveryCodeList Codes="_codes" />
+}
+else
+{
+    <p>@T["recovery.none"]</p>
+}
+<a class="kz-button-primary kz-button-link" href="@AccountEndpoints.SafeReturnUrl(ReturnUrl)">@T["common.continue"]</a>
+
+@code {
+    [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
+    [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
+
+    private string[]? _codes;
+
+    protected override void OnInitialized()
+    {
+        _codes = AccountEndpoints.ReadProtected(HttpContext, Options.Value.RecoveryCodesCookie)?.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        AccountEndpoints.DeleteCookie(HttpContext, Options.Value.RecoveryCodesCookie);
+    }
+}

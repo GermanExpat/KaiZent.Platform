@@ -1,0 +1,13 @@
+@inject Texts T
+@* QR-Code und Schlüssel zum Abtippen. Das SVG erzeugt die API selbst (QRCoder), es enthält keine Fremddaten. *@
+<div class="kz-2fa-setup">
+    <div class="kz-2fa-qr">@((MarkupString)Setup.QrCodeSvg)</div>
+    <div>
+        <p class="kz-small">@T["twofactor.setup.manual"]</p>
+        <code class="kz-2fa-secret">@string.Join(" ", Setup.Secret.Chunk(4).Select(c => new string(c)))</code>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public TwoFactorSetup Setup { get; set; } = default!;
+}

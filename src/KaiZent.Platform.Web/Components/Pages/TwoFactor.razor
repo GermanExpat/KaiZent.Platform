@@ -1,0 +1,30 @@
+@page "/account/2fa"
+@layout AccountLayout
+@attribute [AllowAnonymous]
+@inject Texts T
+@inject IOptions<KaiZentWebOptions> Options
+
+<PageTitle>@T["twofactor.title"] · @Options.Value.ProductName</PageTitle>
+
+<h1>@T["twofactor.title"]</h1>
+<p class="kz-subtitle">@T["twofactor.hint"]</p>
+
+<form method="post" action="account/signin/2fa" data-enhance="false">
+    <AntiforgeryToken />
+    <input type="hidden" name="returnUrl" value="@ReturnUrl" />
+    <div class="kz-field">
+        <label for="code">@T["twofactor.code"]</label>
+        <input id="code" name="code" class="kz-input" inputmode="numeric" autocomplete="one-time-code" maxlength="20" required autofocus />
+    </div>
+    @if (Error == "code")
+    {
+        <div class="kz-error" role="alert">@T["twofactor.error.code"]</div>
+    }
+    <button type="submit" class="kz-button-primary">@T["login.submit"]</button>
+</form>
+<p class="kz-small"><a href="account/login">@T["twofactor.back_to_login"]</a></p>
+
+@code {
+    [SupplyParameterFromQuery] public string? Error { get; set; }
+    [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
+}

@@ -14,6 +14,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\samples\KaiZent.Platform.SampleHost\KaiZent.Platform.SampleHost.csproj" />
+    <ProjectReference Include="..\..\samples\KaiZent.Platform.SampleWeb\KaiZent.Platform.SampleWeb.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />

@@ -1,0 +1,83 @@
+@page "/account/login"
+@layout AccountLayout
+@attribute [AllowAnonymous]
+@inject Texts T
+@inject AdminSite AdminSite
+@inject IOptions<KaiZentWebOptions> Options
+
+<PageTitle>@T["login.title"] · @Options.Value.ProductName</PageTitle>
+
+@if (_admin)
+{
+    <h1>@T["login.admin_title"]</h1>
+    <p class="kz-subtitle">@T["login.admin_hint"]</p>
+}
+else
+{
+    <h1>@T["login.title"]</h1>
+    <p class="kz-subtitle">@(Texts.IsEnglish ? Options.Value.TaglineEn : Options.Value.TaglineDe)</p>
+}
+
+@if (SignedOut == "1")
+{
+    <div class="kz-info">@T["login.signed_out"]</div>
+}
+
+<form method="post" action="account/signin" data-enhance="false">
+    <AntiforgeryToken />
+    <input type="hidden" name="returnUrl" value="@ReturnUrl" />
+    <div class="kz-field">
+        <label for="email">@T["login.email"]</label>
+        <input id="email" name="email" type="email" class="kz-input" autocomplete="username" required autofocus />
+    </div>
+    <div class="kz-field">
+        <label for="password">@T["login.password"]</label>
+        <input id="password" name="password" type="password" class="kz-input" autocomplete="current-password" required />
+    </div>
+    @if (Error == "area")
+    {
+        <div class="kz-error" role="alert">
+            @if (_admin)
+            {
+                @T["login.error.area_admin"]
+            }
+            else if (AdminSite.Host is { } host)
+            {
+                @T["login.error.area_tenant"] <a href="@($"https://{host}/account/login")">@host</a>
+            }
+            else
+            {
+                @T["login.error.area"]
+            }
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(Error))
+    {
+        <div class="kz-error" role="alert">@ErrorText</div>
+    }
+    <button type="submit" class="kz-button-primary">@T["login.submit"]</button>
+</form>
+
+@code {
+    [CascadingParameter] private HttpContext? HttpContext { get; set; }
+    [SupplyParameterFromQuery] public string? Error { get; set; }
+    [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
+    [SupplyParameterFromQuery] public string? SignedOut { get; set; }
+
+    private bool _admin;
+
+    protected override void OnInitialized() => _admin = HttpContext is not null && AdminSite.IsAdminHost(HttpContext);
+
+    private string ErrorText => Error switch
+    {
+        "locked" => T["login.error.locked"],
+        "inactive" => T["login.error.inactive"],
+        "expired" => T["login.error.expired"],
+        "expired2fa" => T["login.error.expired2fa"],
+        "throttled" => T["login.error.throttled"],
+        "unreachable" => T["common.unreachable"],
+        "form" => T["common.form_expired"],
+        "idle" => T["login.error.idle"],
+        _ => T["login.error.credentials"],
+    };
+}

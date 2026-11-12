@@ -1,0 +1,95 @@
+/* Konto-Seiten der KaiZent-Apps (Anmeldung, Passwort, Zwei-Faktor, Mein Konto). Ohne DevExpress; Akzentfarbe aus dem Farbschema des Kontos. */
+.kz-account {
+    --kz-accent: #0f6cbd;
+    --kz-bg: #f5f5f5;
+    --kz-card: #ffffff;
+    --kz-text: #242424;
+    --kz-muted: #616161;
+    --kz-border: #d1d1d1;
+    --kz-error-bg: #fde7e9;
+    --kz-error-text: #a4262c;
+    --kz-info-bg: #e5f1fb;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 2rem 1rem;
+    box-sizing: border-box;
+    background: var(--kz-bg);
+    color: var(--kz-text);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-size: 15px;
+}
+.kz-account.kz-dark {
+    --kz-bg: #1f1f1f;
+    --kz-card: #292929;
+    --kz-text: #f0f0f0;
+    --kz-muted: #adadad;
+    --kz-border: #4a4a4a;
+    --kz-error-bg: #442726;
+    --kz-error-text: #f1bbbc;
+    --kz-info-bg: #1c3045;
+}
+.kz-card {
+    width: 100%;
+    max-width: 30rem;
+    background: var(--kz-card);
+    border: 1px solid var(--kz-border);
+    border-radius: 8px;
+    padding: 2rem;
+    box-sizing: border-box;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+}
+.kz-card h1 { font-size: 1.5rem; margin: .75rem 0 .25rem; }
+.kz-card h2 { font-size: 1.15rem; margin: 1.75rem 0 .5rem; border-top: 1px solid var(--kz-border); padding-top: 1.25rem; }
+.kz-card h3 { font-size: 1rem; margin: 1.25rem 0 .5rem; }
+.kz-brand { display: flex; align-items: baseline; gap: .4rem; font-weight: 600; font-size: 1.35rem; }
+.kz-brand-name { color: var(--kz-text); }
+.kz-brand-product { color: var(--kz-accent); }
+.kz-subtitle { color: var(--kz-muted); margin: 0 0 1.25rem; }
+.kz-field { display: flex; flex-direction: column; gap: .3rem; margin-bottom: 1rem; }
+.kz-field label { font-weight: 600; font-size: .9rem; }
+.kz-input {
+    font: inherit;
+    padding: .55rem .7rem;
+    border: 1px solid var(--kz-border);
+    border-radius: 4px;
+    background: var(--kz-card);
+    color: var(--kz-text);
+}
+.kz-input:focus { outline: 2px solid var(--kz-accent); outline-offset: 1px; border-color: var(--kz-accent); }
+.kz-button-primary, .kz-button-secondary {
+    font: inherit;
+    font-weight: 600;
+    display: inline-block;
+    padding: .6rem 1.2rem;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+}
+.kz-button-primary { width: 100%; box-sizing: border-box; background: var(--kz-accent); color: #fff; border: 1px solid var(--kz-accent); }
+.kz-button-primary:hover { filter: brightness(.92); }
+.kz-button-secondary { background: transparent; color: var(--kz-text); border: 1px solid var(--kz-border); }
+.kz-button-link { margin-top: 1rem; }
+.kz-link-button { font: inherit; background: none; border: none; padding: 0; color: var(--kz-accent); cursor: pointer; text-decoration: underline; }
+.kz-account a { color: var(--kz-accent); }
+.kz-error { background: var(--kz-error-bg); color: var(--kz-error-text); padding: .6rem .8rem; border-radius: 4px; margin-bottom: 1rem; }
+.kz-info { background: var(--kz-info-bg); padding: .6rem .8rem; border-radius: 4px; margin-bottom: 1rem; }
+.kz-small { font-size: .85rem; }
+.kz-muted { color: var(--kz-muted); }
+.kz-languages { display: flex; gap: 1rem; font-size: .9rem; }
+.kz-languages a.kz-active { font-weight: 700; text-decoration: none; }
+.kz-2fa-setup { display: flex; gap: 1.25rem; align-items: center; flex-wrap: wrap; margin: 1rem 0; }
+.kz-2fa-qr svg { width: 180px; height: 180px; background: #fff; padding: 6px; border-radius: 4px; }
+.kz-2fa-secret { font-size: 1rem; letter-spacing: .05em; word-break: break-all; }
+.kz-recovery-codes { columns: 2; list-style: none; padding: 0; font-size: 1.05rem; }
+.kz-recovery-codes li { padding: .2rem 0; }
+.kz-account-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--kz-border); }
+.kz-account-foot form { margin: 0; }
+@media print {
+    .kz-account { background: #fff; }
+    .kz-languages, .kz-button-primary { display: none; }
+}

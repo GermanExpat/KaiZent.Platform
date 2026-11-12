@@ -9,7 +9,8 @@ Benutzereinstellungen (Farbschema, Sprache), Protokoll, Verschlüsselung von Zug
 |---|---|
 | `KaiZent.Platform.Contracts` | Routen, DTOs, Rollen, Validierung, Farbschemata (DevExpress-Standardthemes), Sprachen DE/EN |
 | `KaiZent.Platform.Data` | Migrationen für Katalog und Mandanten, Verbindungen je Mandant, Protokoll, Verschlüsselung |
-| `KaiZent.Platform.Api` | Anmeldung (JWT, Sperre nach Fehlversuchen), Mandanten anlegen/sperren, Benutzer, Einstellungen |
+| `KaiZent.Platform.Api` | Anmeldung (JWT, Sperre nach Fehlversuchen, Zwei-Faktor), Mandanten anlegen/sperren, Benutzer, Einstellungen |
+| `KaiZent.Platform.Web` | Für die Blazor-Apps: Anmeldeseiten mit Zwei-Faktor, „Mein Konto“ (Farbschema, Sprache, Passwort, Zwei-Faktor), API-Client, Texte DE/EN |
 
 ## Einbinden
 
