@@ -1,0 +1,19 @@
+@page "/"
+@attribute [Authorize]
+@inject Texts T
+@inject AuthSession Session
+
+<h1 id="hello">@T.Format("home.hello", _name)</h1>
+<p id="theme">@_theme</p>
+<p id="culture">@System.Globalization.CultureInfo.CurrentUICulture.Name</p>
+
+@code {
+    private string? _name, _theme;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await Session.GetUserAsync();
+        _name = user.FindFirstValue(ClaimTypes.Name);
+        _theme = (await Session.GetPreferencesAsync()).Theme;
+    }
+}

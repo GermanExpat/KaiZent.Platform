@@ -1,0 +1,26 @@
+@inherits LayoutComponentBase
+@inject IOptions<KaiZentWebOptions> Options
+@* Rahmen der Konto-Seiten: ohne Menü, mit Marke, statisch gerendert. Farben folgen dem Farbschema des Kontos (hell/dunkel, Akzent). *@
+<HeadContent>
+    <link rel="stylesheet" href="_content/KaiZent.Platform.Web/kaizent-account.css" />
+</HeadContent>
+<div class="kz-account @(_theme.IsDark ? "kz-dark" : "")" style="--kz-accent: @_theme.PreviewColor">
+    <main class="kz-card">
+        <BrandMark />
+        @Body
+    </main>
+    <LanguageLinks />
+</div>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? Auth { get; set; }
+
+    private ThemeOption _theme = ThemeCatalog.Resolve(null);
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Auth is null) return;
+        var user = (await Auth).User;
+        if (user.Identity?.IsAuthenticated == true) _theme = ThemeCatalog.Resolve(AppClaims.PreferencesOf(user).Theme);
+    }
+}

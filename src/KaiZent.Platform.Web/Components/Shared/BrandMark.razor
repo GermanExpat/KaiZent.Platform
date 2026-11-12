@@ -1,0 +1,8 @@
+@inject IOptions<KaiZentWebOptions> Options
+<div class="kz-brand">
+    <span class="kz-brand-name">KaiZent</span>
+    @if (!string.IsNullOrEmpty(Options.Value.ProductShort))
+    {
+        <span class="kz-brand-product">@Options.Value.ProductShort</span>
+    }
+</div>

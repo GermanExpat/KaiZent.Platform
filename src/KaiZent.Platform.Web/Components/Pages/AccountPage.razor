@@ -1,0 +1,163 @@
+@page "/account"
+@layout AccountLayout
+@attribute [Authorize]
+@inject Texts T
+@inject KaiZentApi Api
+@inject IOptions<KaiZentWebOptions> Options
+
+<PageTitle>@T["account.title"] · @Options.Value.ProductName</PageTitle>
+
+<h1>@T["account.title"]</h1>
+<p class="kz-subtitle">@_user?.FindFirstValue(ClaimTypes.Name) · @_user?.FindFirstValue(ClaimTypes.Email)</p>
+
+@if (Saved == "1")
+{
+    <div class="kz-info" role="status">@T["common.saved"]</div>
+}
+@if (!string.IsNullOrEmpty(Error) && Error != "code")
+{
+    <div class="kz-error" role="alert">@ErrorText</div>
+}
+
+<h2>@T["account.appearance"]</h2>
+<form method="post" action="account/preferences" data-enhance="false">
+    <AntiforgeryToken />
+    <div class="kz-field">
+        <label for="theme">@T["account.theme"]</label>
+        <select id="theme" name="theme" class="kz-input">
+            <optgroup label="Fluent · @T["account.theme.light"]">
+                @foreach (var t in ThemeCatalog.All.Where(t => t.Family == ThemeFamily.Fluent && !t.IsDark))
+                {
+                    <option value="@t.Key" selected="@(t.Key == _prefs.Theme)">@Texts.ThemeName(t)</option>
+                }
+            </optgroup>
+            <optgroup label="Fluent · @T["account.theme.dark"]">
+                @foreach (var t in ThemeCatalog.All.Where(t => t.Family == ThemeFamily.Fluent && t.IsDark))
+                {
+                    <option value="@t.Key" selected="@(t.Key == _prefs.Theme)">@Texts.ThemeName(t)</option>
+                }
+            </optgroup>
+            <optgroup label="@T["account.theme.classic"]">
+                @foreach (var t in ThemeCatalog.All.Where(t => t.Family == ThemeFamily.Classic))
+                {
+                    <option value="@t.Key" selected="@(t.Key == _prefs.Theme)">@Texts.ThemeName(t)</option>
+                }
+            </optgroup>
+        </select>
+    </div>
+    <div class="kz-field">
+        <label for="language">@T["account.language"]</label>
+        <select id="language" name="language" class="kz-input">
+            @foreach (var l in Languages.All)
+            {
+                <option value="@l.Code" selected="@(l.Code == _prefs.Language)">@l.NativeName</option>
+            }
+        </select>
+    </div>
+    <div class="kz-field">
+        <label for="density">@T["account.density"]</label>
+        <select id="density" name="density" class="kz-input">
+            @foreach (var d in Densities.All)
+            {
+                <option value="@d" selected="@(d == _prefs.Density)">@T["account.density." + d]</option>
+            }
+        </select>
+    </div>
+    <button type="submit" class="kz-button-primary">@T["common.save"]</button>
+</form>
+
+<h2>@T["account.security"]</h2>
+<p><a href="account/password">@T["account.change_password"]</a></p>
+
+<h3>@T["account.twofactor"]</h3>
+@if (_status is null)
+{
+    <p class="kz-muted">@T["common.unreachable"]</p>
+}
+else if (_status.Enabled)
+{
+    <p>@T.Format("account.twofactor.on", _status.RecoveryCodesLeft)</p>
+    @if (_status.Required)
+    {
+        <p class="kz-muted">@T["account.twofactor.required"]</p>
+    }
+    else
+    {
+        <form method="post" action="account/two-factor/disable" data-enhance="false" class="kz-inline-form">
+            <AntiforgeryToken />
+            <p class="kz-small kz-muted">@T["account.twofactor.disable_hint"]</p>
+            <div class="kz-field">
+                <label for="disablePassword">@T["login.password"]</label>
+                <input id="disablePassword" name="password" type="password" class="kz-input" autocomplete="current-password" required />
+            </div>
+            <div class="kz-field">
+                <label for="disableCode">@T["twofactor.code"]</label>
+                <input id="disableCode" name="code" class="kz-input" autocomplete="one-time-code" maxlength="20" required />
+            </div>
+            <button type="submit" class="kz-button-secondary">@T["account.twofactor.disable"]</button>
+        </form>
+    }
+}
+else if (_setup is not null)
+{
+    <p>@T["twofactor.setup.hint"]</p>
+    <TwoFactorQr Setup="_setup" />
+    <form method="post" action="account/two-factor/enable" data-enhance="false">
+        <AntiforgeryToken />
+        <div class="kz-field">
+            <label for="code">@T["twofactor.setup.code"]</label>
+            <input id="code" name="code" class="kz-input" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required autofocus />
+        </div>
+        @if (Error == "code")
+        {
+            <div class="kz-error" role="alert">@T["twofactor.setup.error.code"]</div>
+        }
+        <button type="submit" class="kz-button-primary">@T["twofactor.setup.enable"]</button>
+    </form>
+}
+else
+{
+    <p class="kz-muted">@(_status.Required ? T["twofactor.setup.required"] : T["account.twofactor.off"])</p>
+    <a class="kz-button-primary kz-button-link" href="account?setup=1">@T["account.twofactor.setup"]</a>
+}
+
+<div class="kz-account-foot">
+    <a href="">@T["account.back_to_app"]</a>
+    <form method="post" action="account/logout" data-enhance="false">
+        <AntiforgeryToken />
+        <button type="submit" class="kz-link-button">@T["account.sign_out"]</button>
+    </form>
+</div>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState> Auth { get; set; } = default!;
+    [SupplyParameterFromQuery] public string? Saved { get; set; }
+    [SupplyParameterFromQuery] public string? Error { get; set; }
+    [SupplyParameterFromQuery] public string? Setup { get; set; }
+
+    private ClaimsPrincipal? _user;
+    private UserPreferences _prefs = new(ThemeCatalog.Default, Languages.Default, Densities.Normal);
+    private TwoFactorStatus? _status;
+    private TwoFactorSetup? _setup;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _user = (await Auth).User;
+        _prefs = AppClaims.PreferencesOf(_user);
+        try
+        {
+            _status = await Api.GetAsync<TwoFactorStatus>(PlatformRoutes.TwoFactor);
+            // neues Geheimnis nur auf ausdrücklichen Wunsch; gültig wird es erst mit dem bestätigten Code
+            if (_status is { Enabled: false } && Setup == "1") _setup = await Api.PostAsync<TwoFactorSetup>(PlatformRoutes.TwoFactorSetup, null);
+        }
+        catch (Exception e) when (e is ApiException or HttpRequestException) { _status = null; }
+    }
+
+    private string ErrorText => Error switch
+    {
+        "form" => T["common.form_expired"],
+        "required" => T["account.twofactor.required"],
+        "disable" => T["account.twofactor.disable_hint"],
+        _ => T["common.unreachable"],
+    };
+}

@@ -18,4 +18,5 @@ Gemeinsames Fundament der KaiZent-Produkte (zuerst LMS, später VMS). Die Produk
 - **Protokoll:** jede Änderung an Mandantendaten schreibt `TenantContext.AuditAsync`.
 - **Tests:** `dotnet test tests/KaiZent.Platform.Tests` mit `KAIZENT_TEST_POSTGRES` (Wegwerf-Datenbanken, nie gegen echte Daten).
 - **Veröffentlichen:** Tag `v<Version>` auf main → CI veröffentlicht die Pakete in GitHub Packages.
+- **Texte:** jede sichtbare Zeichenkette über `Texts` mit Deutsch und Englisch; der Test `Platform_texts_exist_in_both_languages` prüft die Plattform-Texte.
 - **Sprache:** Oberfläche, Doku und Commit-Messages auf Deutsch, Bezeichner im Code auf Englisch. Commits kurz im Imperativ.

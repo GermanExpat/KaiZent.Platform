@@ -1,0 +1,61 @@
+@page "/account/2fa-setup"
+@layout AccountLayout
+@attribute [AllowAnonymous]
+@inject Texts T
+@inject KaiZentApi Api
+@inject IOptions<KaiZentWebOptions> Options
+
+<PageTitle>@T["twofactor.setup.title"] · @Options.Value.ProductName</PageTitle>
+
+<h1>@T["twofactor.setup.title"]</h1>
+@if (_setup is null)
+{
+    <div class="kz-error" role="alert">@(_problem ?? T["login.error.expired2fa"])</div>
+    <p><a href="account/login">@T["twofactor.back_to_login"]</a></p>
+}
+else
+{
+    <p class="kz-subtitle">@T["twofactor.setup.required"] @T["twofactor.setup.hint"]</p>
+    <TwoFactorQr Setup="_setup" />
+    <form method="post" action="account/signin/2fa-enable" data-enhance="false">
+        <AntiforgeryToken />
+        <input type="hidden" name="returnUrl" value="@ReturnUrl" />
+        <div class="kz-field">
+            <label for="code">@T["twofactor.setup.code"]</label>
+            <input id="code" name="code" class="kz-input" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required autofocus />
+        </div>
+        @if (Error == "code")
+        {
+            <div class="kz-error" role="alert">@T["twofactor.setup.error.code"]</div>
+        }
+        <button type="submit" class="kz-button-primary">@T["twofactor.setup.submit"]</button>
+    </form>
+}
+
+@code {
+    [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
+    [SupplyParameterFromQuery] public string? Error { get; set; }
+    [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
+
+    private TwoFactorSetup? _setup;
+    private string? _problem;
+
+    /// <summary>Jeder Aufruf erzeugt ein neues Geheimnis; gültig wird erst das, dessen Code bestätigt wurde.</summary>
+    protected override async Task OnInitializedAsync()
+    {
+        if (AccountEndpoints.ReadProtected(HttpContext, Options.Value.ChallengeCookie) is not { } challenge) return;
+        try
+        {
+            _setup = await Api.PostAnonymousAsync<TwoFactorSetup>(PlatformRoutes.LoginTwoFactorSetup, new TwoFactorLoginRequest(challenge, ""),
+                HttpContext.Connection.RemoteIpAddress?.ToString());
+        }
+        catch (ApiException e)
+        {
+            _problem = e.IsUnauthorized ? null : T.Error(e);
+        }
+        catch (HttpRequestException)
+        {
+            _problem = T["common.unreachable"];
+        }
+    }
+}

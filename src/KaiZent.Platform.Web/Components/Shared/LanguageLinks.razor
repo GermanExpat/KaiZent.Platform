@@ -1,0 +1,17 @@
+@inject NavigationManager Nav
+@* Sprachumschalter für nicht angemeldete Besucher; angemeldete wählen die Sprache unter "Mein Konto". *@
+<AuthorizeView>
+    <NotAuthorized>
+        <nav class="kz-languages" aria-label="Sprache / Language">
+            @foreach (var l in Languages.All)
+            {
+                <a href="@($"account/language/{l.Code}?returnUrl={Uri.EscapeDataString(ReturnUrl)}")" lang="@l.Code"
+                   class="@(Texts.IsEnglish == (l.Code == Languages.English) ? "kz-active" : "")">@l.NativeName</a>
+            }
+        </nav>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private string ReturnUrl => "/" + Nav.ToBaseRelativePath(Nav.Uri);
+}

@@ -3,9 +3,11 @@
     <Project Path="src/KaiZent.Platform.Contracts/KaiZent.Platform.Contracts.csproj" />
     <Project Path="src/KaiZent.Platform.Data/KaiZent.Platform.Data.csproj" />
     <Project Path="src/KaiZent.Platform.Api/KaiZent.Platform.Api.csproj" />
+    <Project Path="src/KaiZent.Platform.Web/KaiZent.Platform.Web.csproj" />
   </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/KaiZent.Platform.SampleHost/KaiZent.Platform.SampleHost.csproj" />
+    <Project Path="samples/KaiZent.Platform.SampleWeb/KaiZent.Platform.SampleWeb.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/KaiZent.Platform.Tests/KaiZent.Platform.Tests.csproj" />
