@@ -82,6 +82,27 @@ public sealed class TenantContext(IHttpContextAccessor accessor, TenantConnectio
 
     public bool IsTenantAdmin => Http.User.Role() == Roles.TenantAdmin;
 
+    /// <summary>Rolle des angemeldeten Kontos (<see cref="Roles"/>).</summary>
+    public string Role => Http.User.Role() ?? "";
+
+    /// <summary>Team des Betriebs (Administration, Mitglied, Stallpersonal).</summary>
+    public bool IsTeam => Roles.IsTeam(Role);
+
+    /// <summary>Büro (Administration, Mitglied): Verträge, Kontakte, Nachrichten.</summary>
+    public bool IsOffice => Roles.IsOffice(Role);
+
+    /// <summary>Tierarzt mit Lesezugriff.</summary>
+    public bool IsVet => Role == Roles.Vet;
+
+    /// <summary>Kunde (z. B. Einsteller) mit eigenem Portal.</summary>
+    public bool IsOwner => Role == Roles.Owner;
+
+    /// <summary>Wirft 403, wenn das Konto nicht zum Büro gehört (für einzelne Routen in einer Team-Gruppe).</summary>
+    public void RequireOffice()
+    {
+        if (!IsOffice) throw ApiProblem.Forbidden("Diese Funktion ist dem Büro vorbehalten.");
+    }
+
     /// <summary>Freigeschaltete Fachmodule des Mandanten.</summary>
     public IReadOnlyList<string> Modules => Http.Items[AccessGuard.TenantModulesItem] as IReadOnlyList<string> ?? [];
 
@@ -121,12 +142,47 @@ public sealed class TenantContext(IHttpContextAccessor accessor, TenantConnectio
 public static class Policies
 {
     public const string Platform = "kz-platform";
+    /// <summary>Team des Mandanten (Administration, Mitglied, Stallpersonal).</summary>
     public const string Tenant = "kz-tenant";
     public const string TenantAdmin = "kz-tenant-admin";
+    /// <summary>Büro (Administration, Mitglied).</summary>
+    public const string TenantOffice = "kz-tenant-office";
+    /// <summary>Team und Tierarzt; der Tierarzt nur lesend (<see cref="ReadOnlyForVet"/>).</summary>
+    public const string TenantReader = "kz-tenant-reader";
+    /// <summary>Kunden des Mandanten (Portal).</summary>
+    public const string TenantOwner = "kz-tenant-owner";
 
     public static AuthorizationBuilder AddPlatformPolicies(this AuthorizationBuilder auth) => auth
         .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build())
         .AddPolicy(Platform, p => p.RequireRole(Roles.PlatformAdmin))
-        .AddPolicy(Tenant, p => p.RequireClaim(PlatformClaims.TenantId).RequireRole(Roles.TenantAdmin, Roles.Member))
-        .AddPolicy(TenantAdmin, p => p.RequireClaim(PlatformClaims.TenantId).RequireRole(Roles.TenantAdmin));
+        .AddPolicy(Tenant, p => p.RequireClaim(PlatformClaims.TenantId).RequireRole(Roles.TenantAdmin, Roles.Member, Roles.Staff))
+        .AddPolicy(TenantAdmin, p => p.RequireClaim(PlatformClaims.TenantId).RequireRole(Roles.TenantAdmin))
+        .AddPolicy(TenantOffice, p => p.RequireClaim(PlatformClaims.TenantId).RequireRole(Roles.TenantAdmin, Roles.Member))
+        .AddPolicy(TenantReader, p => p.RequireClaim(PlatformClaims.TenantId).RequireRole(Roles.TenantAdmin, Roles.Member, Roles.Staff, Roles.Vet))
+        .AddPolicy(TenantOwner, p => p.RequireClaim(PlatformClaims.TenantId).RequireRole(Roles.Owner));
+}
+
+/// <summary>Der Tierarzt darf in einer <see cref="TenantAccess.TeamAndVetReading"/>-Gruppe nur lesen (GET/HEAD).</summary>
+public sealed class ReadOnlyForVet : IEndpointFilter
+{
+    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
+    {
+        var http = context.HttpContext;
+        if (http.User.Role() == Roles.Vet && !HttpMethods.IsGet(http.Request.Method) && !HttpMethods.IsHead(http.Request.Method))
+            return Results.Json(new ApiError(ErrorCodes.Forbidden, "Der Tierarzt-Zugang kann nur lesen."), statusCode: StatusCodes.Status403Forbidden);
+        return await next(context);
+    }
+}
+
+/// <summary>Wer eine Gruppe von Fachrouten nutzen darf.</summary>
+public enum TenantAccess
+{
+    /// <summary>Team: Administration, Mitglied, Stallpersonal.</summary>
+    Team,
+    /// <summary>Büro: Administration und Mitglied (ohne Stallpersonal).</summary>
+    Office,
+    /// <summary>Team; der Tierarzt darf zusätzlich lesen.</summary>
+    TeamAndVetReading,
+    /// <summary>Nur Kunden (Portal). Die Route muss selbst auf die eigenen Datensätze einschränken.</summary>
+    Owner,
 }

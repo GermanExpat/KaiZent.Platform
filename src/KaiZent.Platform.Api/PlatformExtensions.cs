@@ -100,9 +100,22 @@ public static class PlatformExtensions
         return api;
     }
 
-    /// <summary>Gruppe für Fachrouten eines Mandanten: nur Konten eines Mandanten, immer mit AccessGuard.</summary>
-    public static RouteGroupBuilder MapTenantApi(this IEndpointRouteBuilder api, string prefix = "") =>
-        api.MapGroup(prefix).RequireAuthorization(Policies.Tenant).AddEndpointFilter<AccessGuard>();
+    /// <summary>
+    /// Gruppe für Fachrouten eines Mandanten, immer mit AccessGuard. <paramref name="access"/> legt fest, welche Rollen sie nutzen dürfen
+    /// (Standard: das Team; der Tierarzt und Kunden nicht).
+    /// </summary>
+    public static RouteGroupBuilder MapTenantApi(this IEndpointRouteBuilder api, string prefix = "", TenantAccess access = TenantAccess.Team)
+    {
+        var group = api.MapGroup(prefix).RequireAuthorization(access switch
+        {
+            TenantAccess.Office => Policies.TenantOffice,
+            TenantAccess.TeamAndVetReading => Policies.TenantReader,
+            TenantAccess.Owner => Policies.TenantOwner,
+            _ => Policies.Tenant,
+        }).AddEndpointFilter<AccessGuard>();
+        if (access == TenantAccess.TeamAndVetReading) group.AddEndpointFilter<ReadOnlyForVet>();
+        return group;
+    }
 
     /// <summary>Gruppe für Fachrouten, die nur die Mandanten-Administration nutzen darf.</summary>
     public static RouteGroupBuilder MapTenantAdminApi(this IEndpointRouteBuilder api, string prefix = "") =>
