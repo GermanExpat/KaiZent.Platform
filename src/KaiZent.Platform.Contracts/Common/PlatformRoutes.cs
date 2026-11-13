@@ -31,6 +31,10 @@ public static class PlatformRoutes
     public static string PlatformTenant(Guid id) => $"{PlatformTenants}/{id}";
     public static string PlatformTenantStatus(Guid id) => $"{PlatformTenants}/{id}/status";
 
+    /// <summary>Plattform-Administration: Preisstände des Abo-Pakets (gültig ab einem Datum, mit Einführungsphase).</summary>
+    public const string PlatformPricing = "/api/platform/pricing";
+    public static string PlatformPrice(Guid id) => $"{PlatformPricing}/{id}";
+
     /// <summary>Mandanten-Administration: Benutzer des eigenen Mandanten.</summary>
     public const string TenantUsers = "/api/tenant/users";
     public static string TenantUser(Guid id) => $"{TenantUsers}/{id}";
