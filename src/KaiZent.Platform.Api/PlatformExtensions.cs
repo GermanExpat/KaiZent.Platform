@@ -96,6 +96,7 @@ public static class PlatformExtensions
         api.MapAuth();
         api.MapPreferences();
         api.MapPlatformTenants();
+        api.MapPlatformPricing();
         api.MapTenantAdmin();
         return api;
     }
