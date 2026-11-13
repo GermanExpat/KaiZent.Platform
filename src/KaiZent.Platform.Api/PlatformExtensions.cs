@@ -1,4 +1,5 @@
 using System.Threading.RateLimiting;
+using KaiZent.Platform.Api.Documents;
 using KaiZent.Platform.Api.Features;
 using KaiZent.Platform.Api.Infrastructure;
 using KaiZent.Platform.Data;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
 namespace KaiZent.Platform.Api;
@@ -52,6 +54,13 @@ public static class PlatformExtensions
         services.AddSingleton<TwoFactorService>();
         services.AddSingleton<TenantProvisioner>();
         services.AddSingleton<StartupTasks>();
+        // Dokumente: PDF-Umwandlung und E-Mail; ein Produkt kann eigene Umsetzungen vorher registrieren
+        var documentOptions = builder.Configuration.GetSection(PlatformOptions.Section + ":Documents").Get<DocumentOptions>() ?? new DocumentOptions();
+        services.AddSingleton(documentOptions);
+        if (!string.IsNullOrWhiteSpace(documentOptions.LibreOfficePath)) services.TryAddSingleton<IDocumentConverter, LibreOfficeConverter>();
+        else services.TryAddSingleton<IDocumentConverter, NoDocumentConverter>();
+        services.TryAddSingleton(builder.Configuration.GetSection(PlatformSmtpOptions.Section).Get<PlatformSmtpOptions>() ?? new PlatformSmtpOptions());
+        services.TryAddSingleton<IPlatformMailer, SmtpPlatformMailer>();
         services.AddScoped<AccessGuard>();
         services.AddScoped<TenantContext>();
         services.AddScoped<ApiProblemFilter>();
@@ -97,6 +106,9 @@ public static class PlatformExtensions
         api.MapPreferences();
         api.MapPlatformTenants();
         api.MapPlatformPricing();
+        api.MapPlatformCompany();
+        api.MapPlatformTemplates();
+        api.MapPlatformDocuments();
         api.MapTenantAdmin();
         return api;
     }

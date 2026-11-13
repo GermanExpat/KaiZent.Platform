@@ -35,6 +35,31 @@ public static class PlatformRoutes
     public const string PlatformPricing = "/api/platform/pricing";
     public static string PlatformPrice(Guid id) => $"{PlatformPricing}/{id}";
 
+    /// <summary>Plattform-Administration: Firmendaten des Betreibers (Absender der Rechnungen).</summary>
+    public const string PlatformCompany = "/api/platform/company";
+
+    /// <summary>Plattform-Administration: Rechnungsanschriften der Mandanten.</summary>
+    public const string PlatformBilling = "/api/platform/billing";
+    public static string PlatformTenantBilling(Guid tenantId) => $"{PlatformBilling}/{tenantId}";
+
+    /// <summary>Plattform-Administration: Vorlagen aus dem Dokumentdesigner.</summary>
+    public const string PlatformTemplates = "/api/platform/document-templates";
+    public static string PlatformTemplate(Guid id) => $"{PlatformTemplates}/{id}";
+    /// <summary>Platzhalter einer Vorlagenart (<c>?kind=invoice|letter</c>).</summary>
+    public const string PlatformTemplatePlaceholders = "/api/platform/document-templates/placeholders";
+    /// <summary>Vorschau einer Vorlage mit Beispielwerten.</summary>
+    public static string PlatformTemplatePreview(Guid id) => $"{PlatformTemplates}/{id}/preview";
+
+    /// <summary>Plattform-Administration: Rechnungen und Serienbriefe an Mandanten.</summary>
+    public const string PlatformDocuments = "/api/platform/documents";
+    public static string PlatformDocument(Guid id) => $"{PlatformDocuments}/{id}";
+    public const string PlatformDocumentSeries = "/api/platform/documents/series";
+    public const string PlatformDocumentsIssue = "/api/platform/documents/issue";
+    public const string PlatformDocumentsSend = "/api/platform/documents/send";
+    public static string PlatformDocumentFile(Guid id) => $"{PlatformDocuments}/{id}/file";
+    public static string PlatformDocumentPaid(Guid id) => $"{PlatformDocuments}/{id}/paid";
+    public static string PlatformDocumentCancel(Guid id) => $"{PlatformDocuments}/{id}/cancel";
+
     /// <summary>Mandanten-Administration: Benutzer des eigenen Mandanten.</summary>
     public const string TenantUsers = "/api/tenant/users";
     public static string TenantUser(Guid id) => $"{TenantUsers}/{id}";
