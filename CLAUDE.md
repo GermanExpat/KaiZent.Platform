@@ -12,6 +12,8 @@ Gemeinsames Fundament der KaiZent-Produkte (zuerst LMS, später VMS). Die Produk
 - **Mandanten:** Fachdaten nur in der Mandanten-Datenbank, über `TenantContext`. Der Katalog enthält nie Fachdaten.
   Die Plattform-Administration hat keinen Zugriff auf Mandanteninhalte. Jede Route liegt in einer Gruppe mit `RequireAuthorization(...)`
   und `AccessGuard`; der Test `Every_endpoint_except_login_and_health_requires_authorization` prüft das.
+- **Rollen im Mandanten:** `tenant_admin`, `member` (Büro), `staff` (Stallpersonal), `vet` (nur lesen), `owner` (Kundenportal).
+  Fachrouten wählen ihre Stufe über `MapTenantApi(prefix, TenantAccess.…)`: `Team` (Standard), `Office`, `TeamAndVetReading`, `Owner`.
 - **Migrationen:** `src/KaiZent.Platform.Data/migrations/{CATALOG,TENANT}/V####__name.sql`, Produkte bringen eigene Sätze mit.
   Eine veröffentlichte Migration nie ändern, sondern eine neue anlegen. Mandanten-Migrationen dürfen nie den Katalog ansprechen.
 - **SQL:** nur parametrisiert. Einzige Ausnahme: `create/drop database` in `TenantDatabases` mit streng geprüftem Namen.

@@ -29,6 +29,13 @@ tenant.MapPost("/notes", async (SampleNote note, TenantContext ctx, Cancellation
     return Results.Ok(note with { Id = id });
 });
 
+// Zugriffsstufen: Büro (ohne Stallpersonal), Team mit lesendem Tierarzt, Kundenportal
+api.MapTenantApi("/api/sample/office", TenantAccess.Office).MapGet("", (TenantContext ctx) => Results.Ok(ctx.Role));
+var shared = api.MapTenantApi("/api/sample/shared", TenantAccess.TeamAndVetReading);
+shared.MapGet("", (TenantContext ctx) => Results.Ok(ctx.Role));
+shared.MapPost("", (TenantContext ctx) => Results.Ok(ctx.Role));
+api.MapTenantApi("/api/sample/portal", TenantAccess.Owner).MapGet("", (TenantContext ctx) => Results.Ok(ctx.Role));
+
 app.Run();
 
 public sealed record SampleNote(Guid Id, string Text);

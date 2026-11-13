@@ -131,6 +131,39 @@ public sealed class ApiTests(ApiFixture api)
     }
 
     [DbFact]
+    public async Task Roles_get_their_access_levels()
+    {
+        var (a, _, _) = await api.NewTenantAsync();
+        async Task<HttpClient> UserAsync(string role)
+        {
+            var email = $"{role}-{Guid.NewGuid():N}@hof.test";
+            (await a.PostAsJsonAsync(PlatformRoutes.TenantUsers, new CreateTenantUserRequest(email, role, role, ApiFixture.TenantPassword))).EnsureSuccessStatusCode();
+            return (await api.LoginAsync(email, ApiFixture.TenantPassword)).Client;
+        }
+        var staff = await UserAsync(Roles.Staff);
+        var vet = await UserAsync(Roles.Vet);
+        var owner = await UserAsync(Roles.Owner);
+
+        // Team-Routen: Stallpersonal ja, Tierarzt und Kunde nein
+        Assert.Equal(HttpStatusCode.OK, (await staff.GetAsync("/api/sample/notes")).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await vet.GetAsync("/api/sample/notes")).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await owner.GetAsync("/api/sample/notes")).StatusCode);
+        // Büro: ohne Stallpersonal
+        Assert.Equal(HttpStatusCode.OK, (await a.GetAsync("/api/sample/office")).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await staff.GetAsync("/api/sample/office")).StatusCode);
+        // Tierarzt liest, schreibt aber nicht
+        Assert.Equal(HttpStatusCode.OK, (await vet.GetAsync("/api/sample/shared")).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await vet.PostAsync("/api/sample/shared", null)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await staff.PostAsync("/api/sample/shared", null)).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await owner.GetAsync("/api/sample/shared")).StatusCode);
+        // Portal nur für Kunden
+        Assert.Equal(HttpStatusCode.OK, (await owner.GetAsync("/api/sample/portal")).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await a.GetAsync("/api/sample/portal")).StatusCode);
+        // Benutzerverwaltung bleibt der Administration vorbehalten
+        Assert.Equal(HttpStatusCode.Forbidden, (await owner.GetAsync(PlatformRoutes.TenantUsers)).StatusCode);
+    }
+
+    [DbFact]
     public async Task Users_of_other_tenants_are_invisible()
     {
         var (a, _, _) = await api.NewTenantAsync();
