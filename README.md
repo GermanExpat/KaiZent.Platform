@@ -9,7 +9,7 @@ Benutzereinstellungen (Farbschema, Sprache), Protokoll, Verschlüsselung von Zug
 |---|---|
 | `KaiZent.Platform.Contracts` | Routen, DTOs, Rollen, Validierung, Farbschemata (DevExpress-Standardthemes), Sprachen DE/EN |
 | `KaiZent.Platform.Data` | Migrationen für Katalog und Mandanten, Verbindungen je Mandant, Protokoll, Verschlüsselung |
-| `KaiZent.Platform.Api` | Anmeldung (JWT, Sperre nach Fehlversuchen, Zwei-Faktor), Mandanten anlegen/sperren, Paketpreise mit Gültig-ab und Einführungsphase, Firmendaten, Rechnungen und Serienbriefe an Mandanten, Benutzer, Einstellungen |
+| `KaiZent.Platform.Api` | Anmeldung (JWT, Sperre nach Fehlversuchen, Zwei-Faktor), Mandanten anlegen/sperren, Paketpreise mit Gültig-ab und Einführungsphase, Firmendaten, Rechnungen und Serienbriefe an Mandanten, Systemeinstellungen (E-Mail, KI), Benutzer, Einstellungen |
 | `KaiZent.Platform.Web` | Für die Blazor-Apps: Anmeldeseiten mit Zwei-Faktor, „Mein Konto“ (Farbschema, Sprache, Passwort, Zwei-Faktor), API-Client, Texte DE/EN |
 
 ## Einbinden
@@ -36,7 +36,18 @@ erzeugt die Datei und speichert sie unveränderlich. Korrekturen laufen über ei
 
 - **PDF:** `Platform:Documents:LibreOfficePath` (Pfad zu `soffice`) schaltet die PDF-Erzeugung mit LibreOffice ein. Ein Produkt kann
   stattdessen eine eigene `IDocumentConverter`-Umsetzung registrieren (vor `AddKaiZentPlatform`). Ohne Umwandler bleiben Dokumente `.docx`.
-- **E-Mail:** Abschnitt `Smtp` (`Host`, `Port`, `User`, `Password`, `From`, `FromName`, `UseSsl`), wie im Produkt.
+- **E-Mail:** siehe Systemeinstellungen.
+
+## Systemeinstellungen (E-Mail-Versand, KI)
+
+Die Plattform-Administration pflegt den SMTP-Versand (`/api/platform/settings/mail`) und die KI-Anbindung (`/api/platform/settings/ai`,
+Anbieter aus `AiProviders`: Mistral, OpenAI, Anthropic). SMTP-Passwort und API-Schlüssel liegen im Katalog nur mit der `SecretBox`
+verschlüsselt und kommen nie im Klartext zurück (nur „hinterlegt“ bzw. die letzten vier Zeichen des Schlüssels). Testfunktionen:
+`…/mail/test` schickt eine Test-E-Mail, `…/ai/test` ruft kostenlos die Modellliste des Anbieters ab.
+
+Produkte lesen die gültigen Werte über `PlatformSettings` (`Mail`, `Ai`, `GetMailAsync`, `GetAiAsync`) und versenden über `IPlatformMailer`.
+Solange in der Administration kein Host bzw. kein Anbieter gepflegt ist, gelten die Abschnitte `Smtp` (`Host`, `Port`, `User`, `Password`,
+`From`, `FromName`, `UseSsl`) und `Ai` (`Provider`, `ApiKey`, `Model`, `TimeoutSeconds`) aus der Konfiguration als Rückfall.
 
 ## Tests
 

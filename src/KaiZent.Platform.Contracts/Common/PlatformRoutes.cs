@@ -60,6 +60,12 @@ public static class PlatformRoutes
     public static string PlatformDocumentPaid(Guid id) => $"{PlatformDocuments}/{id}/paid";
     public static string PlatformDocumentCancel(Guid id) => $"{PlatformDocuments}/{id}/cancel";
 
+    /// <summary>Plattform-Administration: Systemeinstellungen (E-Mail-Versand, KI-Anbindung). Geheimnisse verschlüsselt, nie im Klartext zurück.</summary>
+    public const string PlatformMailSettings = "/api/platform/settings/mail";
+    public const string PlatformMailSettingsTest = "/api/platform/settings/mail/test";
+    public const string PlatformAiSettings = "/api/platform/settings/ai";
+    public const string PlatformAiSettingsTest = "/api/platform/settings/ai/test";
+
     /// <summary>Mandanten-Administration: Benutzer des eigenen Mandanten.</summary>
     public const string TenantUsers = "/api/tenant/users";
     public static string TenantUser(Guid id) => $"{TenantUsers}/{id}";
