@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Net;
 using System.Net.Mail;
+using KaiZent.Platform.Api.Settings;
 using Microsoft.Extensions.Logging;
 
 namespace KaiZent.Platform.Api.Documents;
@@ -93,36 +94,30 @@ public interface IPlatformMailer
     Task SendAsync(string to, string subject, string body, MailAttachment? attachment, string? replyTo, CancellationToken ct);
 }
 
-/// <summary>SMTP-Einstellungen aus dem Abschnitt <c>Smtp</c> (wie im Produkt; Passwort nur aus User Secrets bzw. <c>deploy/.env</c>).</summary>
-public sealed class PlatformSmtpOptions
+/// <summary>
+/// E-Mail über SMTP mit den Einstellungen aus der Plattform-Administration (Rückfall: Abschnitt <c>Smtp</c>). Liest die Einstellungen bei jedem
+/// Versand, damit Änderungen in der Administration ohne Neustart gelten.
+/// </summary>
+public sealed class SmtpPlatformMailer(PlatformSettings settings) : IPlatformMailer
 {
-    public const string Section = "Smtp";
+    public const int TimeoutSeconds = 30;
 
-    public string? Host { get; set; }
-    public int Port { get; set; } = 587;
-    public string? User { get; set; }
-    public string? Password { get; set; }
-    public string? From { get; set; }
-    public string FromName { get; set; } = "KaiZent";
-    public bool UseSsl { get; set; } = true;
-}
-
-public sealed class SmtpPlatformMailer(PlatformSmtpOptions options) : IPlatformMailer
-{
-    public bool IsConfigured => !string.IsNullOrWhiteSpace(options.Host) && !string.IsNullOrWhiteSpace(options.From);
+    public bool IsConfigured => settings.Mail.IsConfigured;
 
     public async Task SendAsync(string to, string subject, string body, MailAttachment? attachment, string? replyTo, CancellationToken ct)
     {
-        if (!IsConfigured) throw new InvalidOperationException("Der E-Mail-Versand ist nicht eingerichtet (Smtp__Host, Smtp__From).");
-        using var message = new MailMessage(new MailAddress(options.From!, options.FromName), new MailAddress(to))
+        var mail = await settings.GetMailAsync(ct);
+        if (!mail.IsConfigured)
+            throw new InvalidOperationException("Der E-Mail-Versand ist nicht eingerichtet (Plattform-Administration, Systemeinstellungen).");
+        using var message = new MailMessage(new MailAddress(mail.From, mail.FromName), new MailAddress(to))
         {
             Subject = subject, Body = body, BodyEncoding = System.Text.Encoding.UTF8, SubjectEncoding = System.Text.Encoding.UTF8,
         };
         if (!string.IsNullOrWhiteSpace(replyTo)) message.ReplyToList.Add(new MailAddress(replyTo));
         if (attachment is not null)
             message.Attachments.Add(new Attachment(new MemoryStream(attachment.Content), attachment.FileName, attachment.ContentType));
-        using var client = new SmtpClient(options.Host, options.Port) { EnableSsl = options.UseSsl };
-        if (!string.IsNullOrEmpty(options.User)) client.Credentials = new NetworkCredential(options.User, options.Password);
+        using var client = new SmtpClient(mail.Host, mail.Port) { EnableSsl = mail.UseSsl, Timeout = TimeoutSeconds * 1000 };
+        if (mail.User.Length > 0) client.Credentials = new NetworkCredential(mail.User, mail.Password);
         try
         {
             await client.SendMailAsync(message, ct);

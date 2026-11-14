@@ -1,4 +1,5 @@
 using Dapper;
+using KaiZent.Platform.Api.Settings;
 using KaiZent.Platform.Contracts.Common;
 using KaiZent.Platform.Contracts.Preferences;
 using KaiZent.Platform.Contracts.Security;
@@ -8,8 +9,9 @@ using Microsoft.Extensions.Options;
 
 namespace KaiZent.Platform.Api.Infrastructure;
 
-/// <summary>Beim Start: Katalog und alle Mandanten-Datenbanken migrieren, erstes Konto der Plattform-Administration anlegen.</summary>
-public sealed class StartupTasks(CatalogDb catalog, TenantProvisioner provisioner, IOptions<PlatformOptions> options, ILogger<StartupTasks> log)
+/// <summary>Beim Start: Katalog und alle Mandanten-Datenbanken migrieren, erstes Konto der Plattform-Administration anlegen, Systemeinstellungen laden.</summary>
+public sealed class StartupTasks(CatalogDb catalog, TenantProvisioner provisioner, PlatformSettings settings, IOptions<PlatformOptions> options,
+    ILogger<StartupTasks> log)
 {
     public async Task RunAsync(CancellationToken ct = default)
     {
@@ -21,6 +23,7 @@ public sealed class StartupTasks(CatalogDb catalog, TenantProvisioner provisione
         foreach (var db in tenants) await provisioner.MigrateAsync(db, ct);
 
         await BootstrapAdminAsync(ct);
+        await settings.RefreshAsync(ct);
     }
 
     private async Task BootstrapAdminAsync(CancellationToken ct)

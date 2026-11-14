@@ -2,6 +2,7 @@ using System.Threading.RateLimiting;
 using KaiZent.Platform.Api.Documents;
 using KaiZent.Platform.Api.Features;
 using KaiZent.Platform.Api.Infrastructure;
+using KaiZent.Platform.Api.Settings;
 using KaiZent.Platform.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -59,8 +60,13 @@ public static class PlatformExtensions
         services.AddSingleton(documentOptions);
         if (!string.IsNullOrWhiteSpace(documentOptions.LibreOfficePath)) services.TryAddSingleton<IDocumentConverter, LibreOfficeConverter>();
         else services.TryAddSingleton<IDocumentConverter, NoDocumentConverter>();
+        // Systemeinstellungen (E-Mail-Versand, KI) aus der Plattform-Administration; Umgebungsvariablen (Smtp__…, Ai__…) als Rückfall
         services.TryAddSingleton(builder.Configuration.GetSection(PlatformSmtpOptions.Section).Get<PlatformSmtpOptions>() ?? new PlatformSmtpOptions());
+        services.TryAddSingleton(builder.Configuration.GetSection(PlatformAiOptions.Section).Get<PlatformAiOptions>() ?? new PlatformAiOptions());
+        services.AddSingleton<PlatformSettings>();
         services.TryAddSingleton<IPlatformMailer, SmtpPlatformMailer>();
+        services.AddHttpClient<AiConnectionTester>(c => c.Timeout = TimeSpan.FromSeconds(20));
+        services.TryAddTransient<IAiConnectionTester>(sp => sp.GetRequiredService<AiConnectionTester>());
         services.AddScoped<AccessGuard>();
         services.AddScoped<TenantContext>();
         services.AddScoped<ApiProblemFilter>();
@@ -107,6 +113,7 @@ public static class PlatformExtensions
         api.MapPlatformTenants();
         api.MapPlatformPricing();
         api.MapPlatformCompany();
+        api.MapPlatformSettings();
         api.MapPlatformTemplates();
         api.MapPlatformDocuments();
         api.MapTenantAdmin();

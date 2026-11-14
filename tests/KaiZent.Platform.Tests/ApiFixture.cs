@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using KaiZent.Platform.Api.Documents;
+using KaiZent.Platform.Api.Settings;
+using KaiZent.Platform.Contracts.Settings;
 using Npgsql;
 
 namespace KaiZent.Platform.Tests;
@@ -64,9 +66,13 @@ public sealed class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Platform:KeysPath", KeysPath);
         // E-Mails der Plattform (Rechnungen) landen in einem Postfach im Speicher
         builder.ConfigureTestServices(s => s.Replace(ServiceDescriptor.Singleton<IPlatformMailer>(Mailer)));
+        // KI-Verbindungstest ohne Netz: merkt sich, womit er aufgerufen wurde
+        builder.ConfigureTestServices(s => s.Replace(ServiceDescriptor.Singleton<IAiConnectionTester>(AiTester)));
     }
 
     public CapturingMailer Mailer { get; } = new();
+
+    public RecordingAiTester AiTester { get; } = new();
 
     public async Task InitializeAsync()
     {
@@ -145,5 +151,17 @@ public sealed class CapturingMailer : IPlatformMailer
     {
         lock (_sent) _sent.Add((to, subject, attachment));
         return Task.CompletedTask;
+    }
+}
+
+/// <summary>KI-Verbindungstest ohne Netz.</summary>
+public sealed class RecordingAiTester : IAiConnectionTester
+{
+    public EffectiveAi? Last { get; private set; }
+
+    public Task<SettingsTestResult> TestAsync(EffectiveAi ai, CancellationToken ct)
+    {
+        Last = ai;
+        return Task.FromResult(ai.Active is { } p ? new SettingsTestResult(true, p.Name) : new SettingsTestResult(false, "keine KI"));
     }
 }

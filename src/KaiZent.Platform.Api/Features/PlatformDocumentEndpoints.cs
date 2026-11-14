@@ -237,7 +237,7 @@ public static class PlatformDocumentEndpoints
         ILoggerFactory logs, CancellationToken ct)
     {
         CheckBatch(r);
-        if (!mailer.IsConfigured) throw ApiProblem.Unavailable("Der E-Mail-Versand ist nicht eingerichtet (Smtp__Host und Smtp__From).");
+        if (!mailer.IsConfigured) throw ApiProblem.Unavailable("Der E-Mail-Versand ist nicht eingerichtet (Plattform-Administration, Systemeinstellungen).");
         var results = new List<DocumentBatchItem>();
         await using var conn = await catalog.OpenAsync(ct);
         var company = await PlatformCompanyEndpoints.LoadCompanyAsync(conn, ct);
