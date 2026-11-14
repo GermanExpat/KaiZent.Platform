@@ -6,6 +6,10 @@ using KaiZent.Platform.Contracts.Security;
 using KaiZent.Platform.Contracts.Tenants;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using KaiZent.Platform.Api.Documents;
 using Npgsql;
 
 namespace KaiZent.Platform.Tests;
@@ -58,7 +62,11 @@ public sealed class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
         // Pflicht für die Plattform-Administration prüft ein eigener Test
         builder.UseSetting("Platform:RequirePlatformTwoFactor", "false");
         builder.UseSetting("Platform:KeysPath", KeysPath);
+        // E-Mails der Plattform (Rechnungen) landen in einem Postfach im Speicher
+        builder.ConfigureTestServices(s => s.Replace(ServiceDescriptor.Singleton<IPlatformMailer>(Mailer)));
     }
+
+    public CapturingMailer Mailer { get; } = new();
 
     public async Task InitializeAsync()
     {
@@ -118,5 +126,24 @@ public sealed class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
     {
         await using var conn = new NpgsqlConnection(CatalogConnection);
         return (await conn.ExecuteScalarAsync<T>(sql, args))!;
+    }
+}
+
+/// <summary>Postfach im Speicher für die Tests.</summary>
+public sealed class CapturingMailer : IPlatformMailer
+{
+    private readonly List<(string To, string Subject, MailAttachment? Attachment)> _sent = [];
+
+    public bool IsConfigured => true;
+
+    public IReadOnlyList<(string To, string Subject, MailAttachment? Attachment)> Sent
+    {
+        get { lock (_sent) return _sent.ToList(); }
+    }
+
+    public Task SendAsync(string to, string subject, string body, MailAttachment? attachment, string? replyTo, CancellationToken ct)
+    {
+        lock (_sent) _sent.Add((to, subject, attachment));
+        return Task.CompletedTask;
     }
 }
